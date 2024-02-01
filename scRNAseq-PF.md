@@ -13,14 +13,14 @@ This is an analysis of the publicly available single-cell RNA-sequencing data fr
 This is the first part of the analysis and it contains pre-processing the data and its pre-analysis. The steps include
 
 - importing packages,
-- reading in the data and extracting its basic statistics,
+- reading the data and extracting its basic statistics,
 - creating the Seurat object and adding information to metadata,
 - adding more information to metadata,
 - visualizing various ratios and distributions,
-- filtering low quality cells,
+- filtering low-quality cells,
 - saving the Seurat object to load at any time.
 
-Remark this is a combined dataset of 30 samples (n=30); 10 control and 20 PF samples. There are 43 library identifiers which means that for some of the samples, there are more than one library. The samples are also classified in terms of six diagnosis types: chronic hypersensitivity pneumonitis (cHP; n = 3), nonspecific interstitial pneumonia (NSIP; n = 2), sarcoidosis (n = 2), unclassifiable ILD (ILD; n = 1), and nonfibrotic controls (n = 10). The samples and cells can also be labeled as Control and PF. The statistics show that the data is very heterogeneous.
+Remark this is a combined dataset of 30 samples (n=30); 10 control and 20 PF samples. There are 43 library identifiers which means that for some of the samples, there is more than one library. The samples are also classified in terms of six diagnosis types: chronic hypersensitivity pneumonitis (cHP; n = 3), nonspecific interstitial pneumonia (NSIP; n = 2), sarcoidosis (n = 2), unclassifiable ILD (ILD; n = 1), and nonfibrotic controls (n = 10). The samples and cells can also be labeled as Control and PF. The statistics show that the data is very heterogeneous.
 
 
 
@@ -37,9 +37,9 @@ library(Matrix)
 
 ### Read in Data and Basic Statistics
 
-The data can be downloaded from: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135893. You can download three files which are at the bottom of the webpage: GSE135893_barcodes.tsv.gz, GSE135893_genes.tsv.gz, and GSE135893_matrix.mtx.gz . These files contain a set of matrices that correspond to the cell identifiers (cellular barcodes), gene names, and expression values for each cell.
+The data can be downloaded from: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135893. You can download three files which are at the bottom of the webpage: GSE135893_barcodes.tsv.gz, GSE135893_genes.tsv.gz, and GSE135893_matrix.mtx.gz. These files contain a set of matrices that correspond to the cell identifiers (cellular barcodes), gene names, and expression values for each cell.
 
-Expression values can be read in by `readMM()` while `read_tsv()` can be used to access the other two files.
+Expression values can be read by `readMM()` while `read_tsv()` can be used to access the other two files.
 
 ```
 # Read in `matrix.mtx`
@@ -48,7 +48,7 @@ genes <- read_tsv("../Data/Source/GSE135893_genes.tsv", col_names = FALSE, show_
 cell_ids <- read_tsv("../Data/Source/GSE135893_barcodes.tsv", col_names = FALSE, show_col_types = FALSE)$X1
 ```
 
-Expression matrix should have gene names in the rows and cell identifiers in the columns. 
+The expression matrix should have gene names in the rows and cell identifiers in the columns. 
 
 ```
 rownames(counts) <- genes
@@ -58,7 +58,7 @@ colnames(counts) <- cell_ids
 Let’s have the summary of counts for cells. `colSums()` is a function that works on each column in a matrix and returns the sum of the elements in the corresponding column as a vector element.
 
 ```
-# summary of counts for cells
+# Summary of counts for cells
 counts_per_cell <- Matrix::colSums(counts)
 head(counts_per_cell)
 ## F01157_AAACCTGAGCATCATC F01157_AAACCTGGTGAACCTT F01157_AAACCTGTCATCGCTC 
@@ -74,12 +74,14 @@ A general view of the distribution of the counts per cell.
 cpc_hist.plot <- hist(log10(counts_per_cell+1),main='counts per cell',col='wheat', breaks = 100)
 ```
 
-INSERT IMAGE HERE
+![1-counts-per-cell](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/d639bf54-e572-4180-8bc4-4d46c03284e6)
+
+
 
 Similarly, let’s have the summary of counts for genes. `rowSums()` is a function that works on each row in a matrix and returns the sum of the elements in the corresponding row as a vector element.
 
 ```
-# summary of counts for genes
+# Summary of counts for genes
 counts_per_gene <- Matrix::rowSums(counts)
 head(counts_per_gene)
 ##  RP11-34P13.3       FAM138A         OR4F5  RP11-34P13.7  RP11-34P13.8 
@@ -95,12 +97,13 @@ A general view of the distribution of the counts per gene.
 cpg_hist.plot <- hist(log10(counts_per_gene+1),main='counts per gene',col='wheat', breaks = 200)
 ```
 
-INSERT IMAGE HERE
+![2-counts-per-gene](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/77c0203d-80de-4f80-9b41-5f02648ca25e)
+
 
 Let’s also check the number of genes in each cell and in how many cells a particular gene is found.
 
 ```
-# number of genes with count more than 0 for a cell; count gene only if it has non-zero reads mapped.
+# number of genes with a count more than 0 for a cell; count gene only if it has non-zero reads mapped.
 genes_per_cell <- Matrix::colSums(counts>0) 
 
 # number of cells with count more than 0 for a gene; only count cells where the gene is expressed
@@ -108,13 +111,15 @@ cells_per_gene <- Matrix::rowSums(counts>0)
 gpcell_hist.plot <- hist(log10(genes_per_cell+1),main='genes per cell',col='wheat', breaks = 100)
 ```
 
-INSERT IMAGE HERE
+![3-genes-per-cell](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/07a58e26-774b-4e48-b67f-c7e3ae72425f)
+
 
 ```
 cpgene_hist.plot <- hist(log10(cells_per_gene+1),main='cell per gene',col='wheat', breaks = 100)
 ```
 
-INSERT IMAGE HERE
+
+![4-cells-per-gene](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/f3a84fce-f292-446d-84eb-41b49971c235)
 
 
 
@@ -151,17 +156,17 @@ head(ild_seurat@meta.data)
 
 Seurat automatically generates very useful two metrics:
 
-`nCount_RNA` the total number of UMIs (or reads) 
-`nFeature_RNA` the number of observed genes
+`nCount_RNA` is the total number of UMIs (or reads) 
+`nFeature_RNA` is the number of observed genes
 
 Let’s add the number of genes per UMI for each cell and the percentage of transcripts that map to mitochondrial genes to metadata.
 
 ```
-# Add number of genes per UMI for each cell to metadata
+# Add the number of genes per UMI for each cell to metadata
 ild_seurat$log10GenesPerUMI <- log10(ild_seurat$nFeature_RNA) / log10(ild_seurat$nCount_RNA)
 ```
 
-Large numbers of reads coming from mitochondria may fill in single cell dataset. Such cells are often sick cells undergoing apoptosis and they should be eliminated. Gene names can be accessed by the rownames of the `@assays$RNA$counts` slot of the Seurat object and the mitochondrial genes can be identified by their names starting with “MT-”.
+Large numbers of reads coming from mitochondria may fill in single cell dataset. Such cells are often sick cells undergoing apoptosis and they should be eliminated. Gene names can be accessed by `rownames` of the `@assays$RNA$counts` slot of the Seurat object and the mitochondrial genes can be identified by their names starting with “MT-”.
 
 ```
 grep("^MT-", rownames(ild_seurat@assays$RNA$counts), value = TRUE)
@@ -189,9 +194,9 @@ Now, we can observe the number of counts and mitocondrial ratio for all of the d
 VlnPlot(ild_seurat, features=c("nCount_RNA","mitoRatio"), raster = FALSE, alpha = 0.01)
 ```
 
+![5-nCount-mitoRatio](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/10c76e57-97b4-4866-9c5a-630d3bf19db1)
 
 
-INSERT IMAGE HERE
 
 
 
@@ -207,13 +212,14 @@ ild_seurat@meta.data    %>%
     theme_classic() 
 ```
 
-INSERT IMAGE HERE
+
+![6-corr-transcripts-genes](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/7eecfd50-5e5f-419a-9482-7185d279f246)
 
 
 
 ### Add More Information to metadata
 
-Let’s copy metadata of Seurat object to a separate dataframe and perform all operations (for the time being) on this dataframe.
+Let’s copy the metadata of the Seurat object to a separate dataframe and perform all operations (for the time being) on this dataframe.
 
 ```
 # Create metadata dataframe
@@ -229,7 +235,7 @@ metadata <- metadata %>%
                       nGene = nFeature_RNA)
 ```
 
-It would be useful to add a new entry to metadata as Diagnosis. Mark the cells according to Control, cHP, ILD, NSIP, IPF, Sarcoidosis.
+It would be useful to add a new entry to metadata as Diagnosis. Mark the cells according to Control, cHP, ILD, NSIP, IPF, and Sarcoidosis.
 
 ```
 df_description = read.csv(file = "../Data/Source/aba1972_table_s2.csv")
@@ -280,10 +286,10 @@ factor_ident <- factor(list_ident)
 metadata$Sample_Name <- factor_ident 
 ```
 
-Add metadata back to Seurat object.
+Add metadata back to the Seurat object.
 
 ```
-# Add metadata back to Seurat object
+# Add metadata back to the Seurat object
 ild_seurat@meta.data <- metadata
 ```
 
@@ -307,7 +313,8 @@ metadata %>%
     
 ```
 
-INSERT IMAGE HERE
+![7-histogram-NCells-diagnosis](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/7bbfc12d-214e-4840-b4ad-dbe7a35a676d)
+
 
 Visualize the number of cell counts per condition.
 
@@ -322,7 +329,8 @@ metadata %>%
     ggtitle("NCells")
 ```
 
-INSERT IMAGE HERE
+![8-histogram-NCells-condition](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/dbb1cb72-ad80-4807-a299-331e08348d4d)
+
 
 Visualize the number UMIs/transcripts per cell.
 
@@ -337,7 +345,8 @@ metadata %>%
     geom_vline(xintercept = 500)
 ```
 
-INSERT IMAGE HERE
+
+![9-density-UMIs-per-cell](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/0d93fb62-630e-4ff3-87ee-47bbcae42f20)
 
 
 
@@ -353,7 +362,8 @@ metadata %>%
     geom_vline(xintercept = 250)
 ```
 
-INSERT IMAGE HERE
+![10-density-genes-per-cell](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/524c8c42-d77c-4b45-a2d6-808ad0d789e3)
+
 
 Visualize the overall complexity of the gene expression by visualizing the genes detected per UMI (novelty score).
 
@@ -366,7 +376,8 @@ metadata %>%
     geom_vline(xintercept = 0.8)
 ```
 
-INSERT IMAGE HERE
+![11-density-complexity](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/a6472c5e-affd-44ef-a35b-1d72754b104c)
+
 
 Visualize the distribution of mitochondrial gene expression detected per cell.
 
@@ -380,14 +391,15 @@ metadata %>%
     geom_vline(xintercept = 0.20)
 ```
 
-INSERT IMAGE HERE
+![12-density-miyoRatio-per-cell](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/8de437f7-2319-4882-9f9f-d0691ecab7c9)
 
 
 
-Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs.
+
+Visualize the correlation between genes detected and the number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs.
 
 ```
-# Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
+# Visualize the correlation between genes detected and the number of UMIs and determine whether the strong presence of cells with low numbers of genes/UMIs
 metadata %>% 
     ggplot(aes(x=nUMI, y=nGene, color=mitoRatio, group = condition)) +   
     geom_point() + 
@@ -401,20 +413,18 @@ metadata %>%
     facet_wrap(~condition)
 ```
 
-
-
-INSERT IMAGE HERE
+![13-correlation-genes-UMIs-before](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/5ba9d2f1-862d-4ce7-8705-2cdb6293f050)
 
 
 
-### Filter low quality cells
+### Filter low-quality cells
 
 Filter out cells with less than 250 genes and more than 20% mitoRatio
 
-Filter out low quality cells using selected thresholds.
+Filter out low-quality cells using selected thresholds.
 
 ```
-# Filter out low quality cells using selected thresholds - these will change with experiment
+# Filter out low-quality cells using selected thresholds - these will change with the experiment
 filtered_seurat <- subset(x = ild_seurat, 
                          subset= (nUMI >= 500) & 
                            (nGene >= 250) & 
@@ -428,7 +438,7 @@ Some more filtering.
 # Extract counts
 counts <- GetAssayData(object = filtered_seurat, layer = "counts")
 
-# Output a logical matrix specifying for each gene on whether or not there are more than zero counts per cell
+# Output a logical matrix specifying for each gene whether or not there are more than zero counts per cell
 nonzero <- counts > 0
 
 # Sums all TRUE values and returns TRUE if more than 10 TRUE values per gene
@@ -449,7 +459,7 @@ filtered_seurat
 Sanity check for the filtered data.
 
 ```
-# Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
+# Visualize the correlation between genes detected and the number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
 filtered_seurat@meta.data %>% 
     ggplot(aes(x=nUMI, y=nGene, color=mitoRatio, group = condition)) + 
     geom_point() + 
@@ -463,16 +473,17 @@ filtered_seurat@meta.data %>%
     facet_wrap(~condition)
 ```
 
-INSERT IMAGE HERE
+![14-correlation-genes-UMIs-after](https://github.com/mvolkanatalay/scRNAseq-PulmonaryFibrosis/assets/134640971/ca79d6b7-cef8-4bc5-9c37-f6d346b443eb)
+
 
 
 
 ### Save Seurat object
 
-Save Seurat object to load at any time.
+Save the Seurat object to load at any time.
 
 ```
-# Create .RData object to load at any time
+# Create RData object to load at any time
 save(filtered_seurat, file="../data/generated/filtered_seurat-20240122.RData")
 ```
 
