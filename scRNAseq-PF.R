@@ -1,3 +1,17 @@
+###################################
+# Single-cell RNA-seq Analysis    #
+# Pulmonary Fibrosis  GSE135893   #
+#                                 #
+# M. Volkan Atalay                #
+# Rengul Cetin Atalay             #
+# Robert Hamanaka                 # 
+# Gokhan Mutlu                    #
+#                                 #
+# January 2024                    #
+###################################
+
+
+
 ## ----LIBRARIES----------------------------------------------------------------------------------------
 library(dplyr)
 library(Seurat)
@@ -7,7 +21,7 @@ library(Matrix)
 
 
 ## ----READ COUNT MATRIX--------------------------------------------------------------------------------
-# Read in `matrix.mtx`
+# Read `matrix.mtx`
 counts <- readMM("../Data/Source/GSE135893_matrix.mtx")
 genes <- read_tsv("../Data/Source/GSE135893_genes.tsv", col_names = FALSE, show_col_types = FALSE)$X1
 cell_ids <- read_tsv("../Data/Source/GSE135893_barcodes.tsv", col_names = FALSE, show_col_types = FALSE)$X1
@@ -42,7 +56,7 @@ cpg_hist.plot <- hist(log10(counts_per_gene+1),main='counts per gene',col='wheat
 
 
 ## ----GENES IN EACH CELL and CELLS PER GENE------------------------------------------------------------
-# number of genes with count more than 0 for a cell; count gene only if it has non-zero reads mapped.
+# number of genes with a count more than 0 for a cell; count gene only if it has non-zero reads mapped.
 genes_per_cell <- Matrix::colSums(counts>0) 
 
 # number of cells with count more than 0 for a gene; only count cells where the gene is expressed
@@ -72,7 +86,7 @@ head(ild_seurat@meta.data)
 
 
 ## ----NUMBER of GENES per UMI--------------------------------------------------------------------------
-# Add number of genes per UMI for each cell to metadata
+# Add the number of genes per UMI for each cell to metadata
 ild_seurat$log10GenesPerUMI <- log10(ild_seurat$nFeature_RNA) / log10(ild_seurat$nCount_RNA)
 
 
@@ -167,7 +181,7 @@ metadata$Sample_Name <- factor_ident
 
 
 ## -----------------------------------------------------------------------------------------------------
-# Add metadata back to Seurat object
+# Add metadata back to the Seurat object
 ild_seurat@meta.data <- metadata
 
 
@@ -235,7 +249,7 @@ metadata %>%
 
 
 ## -----------------------------------------------------------------------------------------------------
-# Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
+# Visualize the correlation between genes detected and the number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
 metadata %>% 
     ggplot(aes(x=nUMI, y=nGene, color=mitoRatio, group = condition)) +   
   	geom_point() + 
@@ -250,7 +264,7 @@ metadata %>%
 
 
 ## -----------------------------------------------------------------------------------------------------
-# Filter out low quality cells using selected thresholds - these will change with experiment
+# Filter out low-quality cells using selected thresholds - these will change with the experiment
 filtered_seurat <- subset(x = ild_seurat, 
                          subset= (nUMI >= 500) & 
                            (nGene >= 250) & 
@@ -262,7 +276,7 @@ filtered_seurat <- subset(x = ild_seurat,
 # Extract counts
 counts <- GetAssayData(object = filtered_seurat, layer = "counts")
 
-# Output a logical matrix specifying for each gene on whether or not there are more than zero counts per cell
+# Output a logical matrix specifying for each gene whether or not there are more than zero counts per cell
 nonzero <- counts > 0
 
 # Sums all TRUE values and returns TRUE if more than 10 TRUE values per gene
@@ -280,7 +294,7 @@ filtered_seurat
 
 
 ## -----------------------------------------------------------------------------------------------------
-# Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
+# Visualize the correlation between genes detected and the number of UMIs and determine whether the strong presence of cells with low numbers of genes/UMIs
 filtered_seurat@meta.data %>% 
     ggplot(aes(x=nUMI, y=nGene, color=mitoRatio, group = condition)) + 
   	geom_point() + 
@@ -295,7 +309,7 @@ filtered_seurat@meta.data %>%
 
 
 ## -----------------------------------------------------------------------------------------------------
-# Create .RData object to load at any time
+# Create RData object to load at any time
 save(filtered_seurat, file="../data/generated/filtered_seurat-20240122.RData")
 
 
